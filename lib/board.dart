@@ -35,6 +35,10 @@ class _GameBoardState extends State<GameBoard> {
   //current tetris piece
   Piece currentPiece = Piece(type: Tetriomino.T);
 
+  int currentScore = 0;
+
+  bool gameOver = false;
+
   @override
   void initState() {
     super.initState();
@@ -47,7 +51,7 @@ class _GameBoardState extends State<GameBoard> {
     currentPiece.initializePiece();
 
     //frame refresh rate
-    Duration frameRate = const Duration(milliseconds: 500);
+    Duration frameRate = const Duration(milliseconds: 200);
     gameLoop(frameRate);
   }
 
@@ -56,14 +60,56 @@ class _GameBoardState extends State<GameBoard> {
       frameRate,
       (timer) {
         setState(() {
+          clearLines();
+
           //check landing
           checkLanding();
 
+          if (gameOver == true) {
+            timer.cancel();
+            showGameOverDialog();
+          }
           //move current piece down
           currentPiece.movePiece(Direction.down);
         });
       },
     );
+  }
+
+  void showGameOverDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Game Over'),
+          content: Text('Score: $currentScore'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                resetGame();
+                Navigator.of(context).pop();
+              },
+              child: const Text('Play Again'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void resetGame() {
+    gameboard = List.generate(
+      columnLength,
+      (i) => List.generate(
+        rowLength,
+        (j) => null,
+      ),
+    );
+    currentScore = 0;
+    gameOver = false;
+
+    createNewPiece();
+    startGame();
   }
 
   //check for collision in a future position
@@ -127,6 +173,10 @@ class _GameBoardState extends State<GameBoard> {
 
     currentPiece = Piece(type: randomType);
     currentPiece.initializePiece();
+
+    if (isGameOver()) {
+      gameOver = true;
+    }
   }
 
   void moveLeft() {
@@ -151,79 +201,119 @@ class _GameBoardState extends State<GameBoard> {
     });
   }
 
+  void clearLines() {
+    for (int row = columnLength - 1; row >= 0; row--) {
+      bool rowIsFull = true;
+      for (int col = 0; col < rowLength; col++) {
+        if (gameboard[row][col] == null) {
+          rowIsFull = false;
+          break;
+        }
+      }
+      if (rowIsFull) {
+        for (int r = row; r > 0; r--) {
+          gameboard[r] = List.from(gameboard[r - 1]);
+        }
+        gameboard[0] = List.generate(row, (index) => null);
+
+        currentScore++;
+      }
+    }
+  }
+
+  bool isGameOver() {
+    for (int col = 0; col < rowLength; col++) {
+      if (gameboard[0][col] != null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Column(
-        children: [
-          //GAME GRID
-          Expanded(
-            child: GridView.builder(
-              itemCount: rowLength * columnLength,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: rowLength),
-              itemBuilder: (context, index) {
-                //get row and column of each index
-                int row = (index / rowLength).floor();
-                int col = index % rowLength;
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          title: const Text("Tetris Game"),
+        ),
+        body: Column(
+          children: [
+            //GAME GRID
+            Expanded(
+              child: GridView.builder(
+                itemCount: rowLength * columnLength,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: rowLength),
+                itemBuilder: (context, index) {
+                  //get row and column of each index
+                  int row = (index / rowLength).floor();
+                  int col = index % rowLength;
 
-                //current piece
-                if (currentPiece.positions.contains(index)) {
-                  return Pixel(
-                    color: currentPiece.color,
-                    child: index,
-                  );
-                }
-                //landed pieces
-                else if (gameboard[row][col] != null) {
-                  final Tetriomino? tetriominoType = gameboard[row][col];
-                  return Pixel(
-                    color: tetriominoColors[tetriominoType],
-                    child: '',
-                  );
-                }
+                  //current piece
+                  if (currentPiece.positions.contains(index)) {
+                    return Pixel(
+                      color: currentPiece.color,
+                    );
+                  }
+                  //landed pieces
+                  else if (gameboard[row][col] != null) {
+                    final Tetriomino? tetriominoType = gameboard[row][col];
+                    return Pixel(
+                      color: tetriominoColors[tetriominoType],
+                    );
+                  }
 
-                // blank pixel
-                else {
-                  return Pixel(
-                    color: Colors.grey[900],
-                    child: index,
-                  );
-                }
-              },
+                  // blank pixel
+                  else {
+                    return Pixel(
+                      color: Colors.grey[900],
+                    );
+                  }
+                },
+              ),
             ),
-          ),
 
-          // GAME CONTROLS
-          Padding(
-            padding: const EdgeInsets.only(bottom: 50),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                //left
-                IconButton(
-                  onPressed: moveLeft,
-                  icon: Icon(Icons.arrow_back_ios_new),
-                  color: Colors.white,
-                ),
-                //rotate
-                IconButton(
-                  onPressed: rotatePiece,
-                  icon: Icon(Icons.rotate_right),
-                  color: Colors.white,
-                ),
-                //right
-                IconButton(
-                  onPressed: moveRight,
-                  icon: Icon(Icons.arrow_forward_ios),
-                  color: Colors.white,
-                ),
-              ],
+            //Score
+            Text(
+              'Score: $currentScore',
+              style: const TextStyle(color: Colors.white),
             ),
-          ),
-        ],
+
+            //GameControls
+            Padding(
+              padding: const EdgeInsets.only(bottom: 50.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  IconButton(
+                    onPressed: moveLeft,
+                    icon: const Icon(
+                      color: Colors.white,
+                      Icons.arrow_left,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: rotatePiece,
+                    icon: const Icon(
+                      color: Colors.white,
+                      Icons.rotate_right,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: moveRight,
+                    icon: const Icon(
+                      color: Colors.white,
+                      Icons.arrow_right,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

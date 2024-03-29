@@ -305,7 +305,7 @@ class Piece {
             newPositions = [
               positions[1] - rowLength,
               positions[1],
-              positions[1] - rowLength,
+              positions[1] + rowLength,
               positions[1] + 2 * rowLength,
             ];
             if (piecePositionIsValid(newPositions)) {
@@ -313,6 +313,27 @@ class Piece {
 
               rotationState = (rotationState + 1) % 4;
             }
+            break;
+          case 2:
+            /*
+              0
+              0
+              0
+              0        
+
+          */
+            newPositions = [
+              positions[1] + rowLength,
+              positions[1],
+              positions[1] - rowLength,
+              positions[1] - 2 * rowLength,
+            ];
+            if (piecePositionIsValid(newPositions)) {
+              positions = newPositions;
+
+              rotationState = 0;
+            }
+
             break;
         }
 
@@ -357,15 +378,55 @@ class Piece {
             
           */
             newPositions = [
-              positions[1] - rowLength,
-              positions[1],
-              positions[1] + 1,
-              positions[1] + rowLength + 1,
+              positions[0] - rowLength,
+              positions[0],
+              positions[0] + 1,
+              positions[0] + rowLength + 1,
             ];
             if (piecePositionIsValid(newPositions)) {
               positions = newPositions;
 
               rotationState = (rotationState + 1) % 4;
+            }
+            break;
+          case 2:
+            /*
+            
+              0 0
+            0 0 
+              
+            
+          */
+            newPositions = [
+              positions[1],
+              positions[1] + 1,
+              positions[1] + rowLength - 1,
+              positions[1] + rowLength,
+            ];
+            if (piecePositionIsValid(newPositions)) {
+              positions = newPositions;
+
+              rotationState = (rotationState + 1) % 4;
+            }
+            break;
+          case 3:
+            /*
+            
+              0 
+              0 0 
+                0
+            
+          */
+            newPositions = [
+              positions[0] - rowLength,
+              positions[0],
+              positions[0] + 1,
+              positions[0] + rowLength + 1,
+            ];
+            if (piecePositionIsValid(newPositions)) {
+              positions = newPositions;
+
+              rotationState = 0;
             }
             break;
         }
@@ -394,9 +455,9 @@ class Piece {
           case 1:
             /*
             
-            0
-            0 0 
               0
+            0 0 
+            0
             
           */
             newPositions = [
@@ -410,6 +471,47 @@ class Piece {
 
               rotationState = (rotationState + 1) % 4;
             }
+            break;
+          case 2:
+            /*
+          
+            0 0
+              0 0 
+
+          */
+            newPositions = [
+              positions[0] + rowLength - 2,
+              positions[1],
+              positions[2] + rowLength - 1,
+              positions[3] + 1,
+            ];
+            if (piecePositionIsValid(newPositions)) {
+              positions = newPositions;
+
+              rotationState = (rotationState + 1) % 4;
+            }
+
+            break;
+          case 3:
+            /*
+          
+              0 
+            0 0
+            0 
+
+          */
+            newPositions = [
+              positions[0] - rowLength - 2,
+              positions[1],
+              positions[2] - rowLength + 1,
+              positions[3] - 1,
+            ];
+            if (piecePositionIsValid(newPositions)) {
+              positions = newPositions;
+
+              rotationState = 0;
+            }
+
             break;
         }
 
@@ -481,15 +583,15 @@ class Piece {
                           
             */
             newPositions = [
-              positions[1] - rowLength,
-              positions[1] - 1,
-              positions[1],
-              positions[1] + 1,
+              positions[2] - rowLength,
+              positions[2] - 1,
+              positions[2],
+              positions[2] + 1,
             ];
             if (piecePositionIsValid(newPositions)) {
               positions = newPositions;
 
-              rotationState = (rotationState + 1) % 4;
+              rotationState = 0;
             }
             break;
         }

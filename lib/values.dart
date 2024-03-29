@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 int rowLength = 10;
-int columnLength = 20;
+int columnLength = 15;
 
 enum Direction { left, right, down }
 
