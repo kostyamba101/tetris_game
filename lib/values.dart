@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 int rowLength = 10;
 int columnLength = 15;
+double speed = 300;
 
 enum Direction { left, right, down }
 

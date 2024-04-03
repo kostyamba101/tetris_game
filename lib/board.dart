@@ -51,7 +51,7 @@ class _GameBoardState extends State<GameBoard> {
     currentPiece.initializePiece();
 
     //frame refresh rate
-    Duration frameRate = const Duration(milliseconds: 200);
+    Duration frameRate = Duration(milliseconds: speed.toInt());
     gameLoop(frameRate);
   }
 
@@ -179,6 +179,14 @@ class _GameBoardState extends State<GameBoard> {
     }
   }
 
+  void moveDown() {
+    if (!checkCollision(Direction.down)) {
+      setState(() {
+        currentPiece.movePiece(Direction.down);
+      });
+    }
+  }
+
   void moveLeft() {
     if (!checkCollision(Direction.left)) {
       setState(() {
@@ -236,82 +244,116 @@ class _GameBoardState extends State<GameBoard> {
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
-          title: const Text("Tetris Game"),
+          title: Text("Tetris Game. Score: $currentScore.Speed: $speed"),
+          centerTitle: true,
+          actions: [
+            IconButton(
+                onPressed: () {
+                  gameOver == true;
+                  Navigator.pushNamed(context, '/settings');
+                },
+                icon: const Icon(Icons.settings))
+          ],
         ),
         body: Column(
           children: [
             //GAME GRID
             Expanded(
-              child: GridView.builder(
-                itemCount: rowLength * columnLength,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: rowLength),
-                itemBuilder: (context, index) {
-                  //get row and column of each index
-                  int row = (index / rowLength).floor();
-                  int col = index % rowLength;
-
-                  //current piece
-                  if (currentPiece.positions.contains(index)) {
-                    return Pixel(
-                      color: currentPiece.color,
-                    );
-                  }
-                  //landed pieces
-                  else if (gameboard[row][col] != null) {
-                    final Tetriomino? tetriominoType = gameboard[row][col];
-                    return Pixel(
-                      color: tetriominoColors[tetriominoType],
-                    );
-                  }
-
-                  // blank pixel
-                  else {
-                    return Pixel(
-                      color: Colors.grey[900],
-                    );
+              child: GestureDetector(
+                onVerticalDragUpdate: (details) {
+                  if (details.delta.dy > 0) {
+                    moveDown();
                   }
                 },
+                onVerticalDragEnd: (details) {
+                  checkLanding();
+                },
+                onHorizontalDragEnd: (details) {
+                  checkLanding();
+                },
+                onHorizontalDragUpdate: (details) {
+                  if (details.delta.dx < 0) {
+                    moveLeft();
+                  } else if (details.delta.dx > 0) {
+                    moveRight();
+                  }
+                },
+                onTap: () {
+                  if (!gameOver) {
+                    rotatePiece();
+                  }
+                },
+                child: GridView.builder(
+                  itemCount: rowLength * columnLength,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: rowLength),
+                  itemBuilder: (context, index) {
+                    //get row and column of each index
+                    int row = (index / rowLength).floor();
+                    int col = index % rowLength;
+
+                    //current piece
+                    if (currentPiece.positions.contains(index)) {
+                      return Pixel(
+                        color: currentPiece.color,
+                      );
+                    }
+                    //landed pieces
+                    else if (gameboard[row][col] != null) {
+                      final Tetriomino? tetriominoType = gameboard[row][col];
+                      return Pixel(
+                        color: tetriominoColors[tetriominoType],
+                      );
+                    }
+
+                    // blank pixel
+                    else {
+                      return Pixel(
+                        color: Colors.grey[900],
+                      );
+                    }
+                  },
+                ),
               ),
             ),
 
-            //Score
-            Text(
-              'Score: $currentScore',
-              style: const TextStyle(color: Colors.white),
-            ),
+            // //Score
+            // Text(
+            //   'Score: $currentScore',
+            //   style: const TextStyle(color: Colors.white),
+            // ),
 
             //GameControls
-            Padding(
-              padding: const EdgeInsets.only(bottom: 50.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  IconButton(
-                    onPressed: moveLeft,
-                    icon: const Icon(
-                      color: Colors.white,
-                      Icons.arrow_left,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: rotatePiece,
-                    icon: const Icon(
-                      color: Colors.white,
-                      Icons.rotate_right,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: moveRight,
-                    icon: const Icon(
-                      color: Colors.white,
-                      Icons.arrow_right,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.only(bottom: 50.0),
+            //   child: Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            //     children: [
+            //       IconButton(
+            //         onPressed: moveLeft,
+            //         icon: const Icon(
+            //           color: Colors.white,
+            //           Icons.arrow_left,
+            //         ),
+            //       ),
+            //       IconButton(
+            //         onPressed: rotatePiece,
+            //         icon: const Icon(
+            //           color: Colors.white,
+            //           Icons.rotate_right,
+            //         ),
+            //       ),
+            //       IconButton(
+            //         onPressed: moveRight,
+            //         icon: const Icon(
+            //           color: Colors.white,
+            //           Icons.arrow_right,
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
           ],
         ),
       ),
